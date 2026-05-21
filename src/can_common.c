@@ -29,16 +29,8 @@ THE SOFTWARE.
 #include "timer.h"
 #include "usbd_gs_can.h"
 
-#ifndef CONFIG_CANFD
-const struct gs_device_bt_const_extended CAN_btconst_ext;
-#endif
-
-#ifndef CONFIG_CAN_FILTER
-const struct gs_device_filter_info CAN_filter_info;
-#endif
-
-bool can_check_bittiming_ok(const struct can_bittiming_const *btc,
-							const struct gs_device_bittiming *timing)
+int can_check_bittiming(const struct can_bittiming_const *btc,
+						const struct gs_device_bittiming *timing)
 {
 	const uint32_t tseg1 = timing->prop_seg + timing->phase_seg1;
 
@@ -49,17 +41,10 @@ bool can_check_bittiming_ok(const struct can_bittiming_const *btc,
 		timing->sjw > btc->sjw_max ||
 		timing->brp < btc->brp_min ||
 		timing->brp > btc->brp_max)
-		return false;
+		return -1;
 
-	return true;
+	return 0;
 }
-
-#ifdef CONFIG_CAN_FILTER
-bool can_check_filter_ok(const struct gs_device_filter *filter)
-{
-	return filter->info.dev == CAN_filter_info.dev;
-}
-#endif
 
 void CAN_SendFrame(USBD_GS_CAN_HandleTypeDef *hcan, can_data_t *channel)
 {
@@ -86,10 +71,7 @@ void CAN_SendFrame(USBD_GS_CAN_HandleTypeDef *hcan, can_data_t *channel)
 
 	// Echo sent frame back to host
 	frame->reserved = 0x0;
-	if (IS_ENABLED(CONFIG_CANFD) && frame->flags & GS_CAN_FLAG_FD)
-		frame->canfd_ts->timestamp_us = timer_get();
-	else
-		frame->classic_can_ts->timestamp_us = timer_get();
+	frame->canfd_ts->timestamp_us = timer_get();
 
 	list_add_tail_locked(&frame_object->list, &hcan->list_to_host);
 
@@ -159,7 +141,7 @@ void CAN_HandleError(USBD_GS_CAN_HandleTypeDef *hcan, can_data_t *channel)
 
 	struct gs_host_frame *frame = &frame_object->frame;
 	frame->classic_can_ts->timestamp_us = timer_get();
-	frame->channel = can_channel_get_nr(channel);
+	frame->channel = channel->nr;
 
 	if (can_parse_error_status(channel, frame, can_err)) {
 		list_add_tail_locked(&frame_object->list, &hcan->list_to_host);
