@@ -233,11 +233,11 @@ bool can_send(can_data_t *channel, struct gs_host_frame *frame)
 {
 	FDCAN_TxHeaderTypeDef TxHeader = {
 		.DataLength = (uint32_t)frame->can_dlc << 16,
-		.ErrorStateIndicator = FDCAN_ESI_ACTIVE,
-		.BitRateSwitch = FDCAN_BRS_OFF,
-		.FDFormat = FDCAN_CLASSIC_CAN,
-		.TxEventFifoControl = FDCAN_NO_TX_EVENTS,
-		.MessageMarker = 0,
+			.ErrorStateIndicator = FDCAN_ESI_ACTIVE,
+			.BitRateSwitch = FDCAN_BRS_OFF,
+			.FDFormat = FDCAN_CLASSIC_CAN,
+			.TxEventFifoControl = FDCAN_NO_TX_EVENTS,
+			.MessageMarker = 0,
 	};
 
 	TxHeader.TxFrameType = frame->can_id & CAN_RTR_FLAG ?
