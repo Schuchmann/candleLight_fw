@@ -72,7 +72,7 @@ void device_can_init(can_data_t *channel, const struct board_channel_config *cha
 		.Pin = pins,
 		.Mode = GPIO_MODE_AF_PP,
 		.Pull = GPIO_NOPULL,
-		.Speed = GPIO_SPEED_FREQ_LOW,
+		.Speed = GPIO_SPEED_FREQ_VERY_HIGH,
 		.Alternate = alternate,
 	};
 	HAL_GPIO_Init(port, &itd);

@@ -120,7 +120,7 @@ void can_set_data_bittiming(can_data_t *channel, const struct gs_device_bittimin
 	hfdcan->Init.DataPrescaler = timing->brp;
 }
 
-void can_enable(can_data_t *channel)
+bool can_enable(can_data_t *channel)
 {
 	FDCAN_HandleTypeDef *hfdcan = &channel->hfdcan;
 	const uint32_t feature = channel->feature;
@@ -142,17 +142,33 @@ void can_enable(can_data_t *channel)
 	hfdcan->Init.FrameFormat = feature & GS_CAN_FEATURE_FD ?
 							   FDCAN_FRAME_FD_BRS : FDCAN_FRAME_CLASSIC;
 
-	HAL_FDCAN_Init(hfdcan);
-	HAL_FDCAN_EnableISOMode(hfdcan);
+	if (HAL_FDCAN_Init(hfdcan) != HAL_OK)
+		return false;
 
-	HAL_FDCAN_ConfigGlobalFilter(hfdcan,
-								 FDCAN_ACCEPT_IN_RX_FIFO0,
-								 FDCAN_ACCEPT_IN_RX_FIFO0,
-								 FDCAN_FILTER_REMOTE,
-								 FDCAN_FILTER_REMOTE);
+	if (HAL_FDCAN_EnableISOMode(hfdcan) != HAL_OK)
+		goto out_deinit;
+
+	if (HAL_FDCAN_ConfigGlobalFilter(hfdcan,
+									 FDCAN_ACCEPT_IN_RX_FIFO0,
+									 FDCAN_ACCEPT_IN_RX_FIFO0,
+									 FDCAN_FILTER_REMOTE,
+									 FDCAN_FILTER_REMOTE) != HAL_OK) {
+		goto out_deinit;
+	}
 
 	board_phy_power_set(channel, true);
-	HAL_FDCAN_Start(hfdcan);
+
+	if (HAL_FDCAN_Start(hfdcan) != HAL_OK) {
+		board_phy_power_set(channel, false);
+		goto out_deinit;
+	}
+
+	return true;
+
+out_deinit:
+	HAL_FDCAN_DeInit(hfdcan);
+
+	return false;
 }
 
 void can_disable(can_data_t *channel)
