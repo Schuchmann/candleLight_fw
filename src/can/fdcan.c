@@ -80,6 +80,12 @@ const struct gs_device_bt_const_extended CAN_btconst_ext = {
 	},
 };
 
+static bool fdcan_is_dlc_valid(uint32_t dlc)
+{
+	/* HAL_FDCAN DataLength is the DLC code, not the shifted register field. */
+	return dlc <= FDCAN_DLC_BYTES_64;
+}
+
 void can_init(can_data_t *channel, const struct board_channel_config *channel_config)
 {
 	FDCAN_HandleTypeDef *hfdcan = &channel->hfdcan;
@@ -209,7 +215,10 @@ bool can_receive(can_data_t *channel, struct gs_host_frame *rx_frame)
 		rx_frame->can_id |= CAN_RTR_FLAG;
 	}
 
-	rx_frame->can_dlc = (RxHeader.DataLength >> 16) & 0x0f;
+	if (!fdcan_is_dlc_valid(RxHeader.DataLength))
+		return false;
+
+	rx_frame->can_dlc = RxHeader.DataLength;
 
 	if (RxHeader.FDFormat == FDCAN_FD_CAN) {
 		rx_frame->canfd_ts->timestamp_us = timestamp_us;
@@ -237,13 +246,17 @@ bool can_is_rx_pending(can_data_t *channel)
 bool can_send(can_data_t *channel, struct gs_host_frame *frame)
 {
 	FDCAN_TxHeaderTypeDef TxHeader = {
-		.DataLength = (uint32_t)frame->can_dlc << 16,
-			.ErrorStateIndicator = FDCAN_ESI_ACTIVE,
-			.BitRateSwitch = FDCAN_BRS_OFF,
-			.FDFormat = FDCAN_CLASSIC_CAN,
-			.TxEventFifoControl = FDCAN_NO_TX_EVENTS,
-			.MessageMarker = 0,
+		.ErrorStateIndicator = FDCAN_ESI_ACTIVE,
+		.BitRateSwitch = FDCAN_BRS_OFF,
+		.FDFormat = FDCAN_CLASSIC_CAN,
+		.TxEventFifoControl = FDCAN_NO_TX_EVENTS,
+		.MessageMarker = 0,
 	};
+
+	if (!fdcan_is_dlc_valid(frame->can_dlc))
+		return false;
+
+	TxHeader.DataLength = frame->can_dlc;
 
 	TxHeader.TxFrameType = frame->can_id & CAN_RTR_FLAG ?
 						   FDCAN_REMOTE_FRAME : FDCAN_DATA_FRAME;
