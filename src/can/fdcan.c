@@ -33,36 +33,41 @@
 #include "gs_usb.h"
 #include "timer.h"
 
+#define FDCAN_FEATURES \
+		(GS_CAN_FEATURE_LISTEN_ONLY | \
+		 GS_CAN_FEATURE_LOOP_BACK | \
+		 GS_CAN_FEATURE_ONE_SHOT | \
+		 GS_CAN_FEATURE_HW_TIMESTAMP | \
+		 GS_CAN_FEATURE_IDENTIFY | \
+		 GS_CAN_FEATURE_PAD_PKTS_TO_MAX_PKT_SIZE | \
+		 GS_CAN_FEATURE_FD | \
+		 GS_CAN_FEATURE_BT_CONST_EXT | \
+		 (IS_ENABLED(CONFIG_TERMINATION) ? \
+		  GS_CAN_FEATURE_TERMINATION : 0) | \
+		 0)
+
+#define FDCAN_NOMINAL_BITTIMING \
+		{ \
+			.tseg1_min = 2, \
+			.tseg1_max = 256, \
+			.tseg2_min = 2, \
+			.tseg2_max = 128, \
+			.sjw_max = 128, \
+			.brp_min = 1, \
+			.brp_max = 512, \
+			.brp_inc = 1, \
+		}
+
 const struct gs_device_bt_const CAN_btconst = {
-	.feature =
-		GS_CAN_FEATURE_LISTEN_ONLY |
-		GS_CAN_FEATURE_LOOP_BACK |
-		GS_CAN_FEATURE_ONE_SHOT |
-		GS_CAN_FEATURE_HW_TIMESTAMP |
-		GS_CAN_FEATURE_IDENTIFY |
-		GS_CAN_FEATURE_PAD_PKTS_TO_MAX_PKT_SIZE |
-		GS_CAN_FEATURE_FD |
-		GS_CAN_FEATURE_BT_CONST_EXT |
-		(IS_ENABLED(CONFIG_TERMINATION) ?
-		 GS_CAN_FEATURE_TERMINATION : 0) |
-		0,
+	.feature = FDCAN_FEATURES,
 	.fclk_can = CAN_CLOCK_SPEED,
-	.btc = {
-		.tseg1_min = 2,
-		.tseg1_max = 256,
-		.tseg2_min = 2,
-		.tseg2_max = 128,
-		.sjw_max = 128,
-		.brp_min = 1,
-		.brp_max = 512,
-		.brp_inc = 1,
-	},
+	.btc = FDCAN_NOMINAL_BITTIMING,
 };
 
 const struct gs_device_bt_const_extended CAN_btconst_ext = {
-	.feature = CAN_btconst.feature,
-	.fclk_can = CAN_btconst.fclk_can,
-	.btc = CAN_btconst.btc,
+	.feature = FDCAN_FEATURES,
+	.fclk_can = CAN_CLOCK_SPEED,
+	.btc = FDCAN_NOMINAL_BITTIMING,
 	.dbtc = {
 		.tseg1_min = 1,
 		.tseg1_max = 32,
