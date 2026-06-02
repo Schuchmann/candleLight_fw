@@ -371,6 +371,9 @@ set(TGTG0B1_LIST
 	"budgetcan"
 	"candleLightFD"
 )
+set(TGTG0B1_DEFAULT_LIST
+	"candleLightFD"
+)
 
 foreach (TGTNAME IN LISTS TGTF042_LIST)
 	option(BUILD_${TGTNAME} "Build firmware for \"${TGTNAME}\" (default=yes)" ON)
@@ -394,7 +397,15 @@ foreach (TGTNAME IN LISTS TGTF407_LIST)
 endforeach()
 
 foreach (TGTNAME IN LISTS TGTG0B1_LIST)
-	option(BUILD_${TGTNAME} "Build firmware for \"${TGTNAME}\" (default=yes)" OFF)
+	if (TGTNAME IN_LIST TGTG0B1_DEFAULT_LIST)
+		set(TGT_DEFAULT ON)
+		set(TGT_DEFAULT_TEXT "yes")
+	else()
+		set(TGT_DEFAULT OFF)
+		set(TGT_DEFAULT_TEXT "no")
+	endif()
+
+	option(BUILD_${TGTNAME} "Build firmware for \"${TGTNAME}\" (default=${TGT_DEFAULT_TEXT})" ${TGT_DEFAULT})
 	if (BUILD_${TGTNAME})
 		add_g0b1_target(${TGTNAME})
 	endif()
