@@ -450,11 +450,6 @@ set(TGTG0B1_LIST
 	"budgetcan"
 	"candleLightFD"
 )
-# G0B1 boards whose pin mapping has been verified on real hardware and that are
-# therefore built by default. The remaining G0B1 targets are opt-in.
-set(TGTG0B1_DEFAULT_LIST
-	"candleLightFD"
-)
 
 foreach (TGTNAME IN LISTS TGTF042_LIST)
 	option(BUILD_${TGTNAME} "Build firmware for \"${TGTNAME}\" (default=yes)" ON)
@@ -478,12 +473,7 @@ foreach (TGTNAME IN LISTS TGTF407_LIST)
 endforeach()
 
 foreach (TGTNAME IN LISTS TGTG0B1_LIST)
-	if (${TGTNAME} IN_LIST TGTG0B1_DEFAULT_LIST)
-		set(TGTDEFAULT ON)
-	else()
-		set(TGTDEFAULT OFF)
-	endif()
-	option(BUILD_${TGTNAME} "Build firmware for \"${TGTNAME}\" (default=${TGTDEFAULT})" ${TGTDEFAULT})
+	option(BUILD_${TGTNAME} "Build firmware for \"${TGTNAME}\" (default=yes)" ON)
 	if (BUILD_${TGTNAME})
 		add_g0b1_target(${TGTNAME})
 	endif()
