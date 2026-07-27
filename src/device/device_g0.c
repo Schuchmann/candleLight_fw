@@ -45,7 +45,8 @@ static void gpio_clk_enable(GPIO_TypeDef *port)
 	}
 }
 
-void device_can_init(can_data_t *channel, const struct board_channel_config *channel_config)
+void device_can_init(can_data_t __maybe_unused *channel,
+					 const struct board_channel_config __maybe_unused *channel_config)
 {
 	GPIO_TypeDef *port = CAN_GPIO_Port;
 	uint16_t pins = CAN_RX_Pin | CAN_TX_Pin;
@@ -76,8 +77,6 @@ void device_can_init(can_data_t *channel, const struct board_channel_config *cha
 		.Alternate = alternate,
 	};
 	HAL_GPIO_Init(port, &itd);
-
-	channel->channel.Instance = channel_config->interface;
 }
 
 void device_sysclock_config(void)
