@@ -77,7 +77,7 @@ void device_can_init(can_data_t *channel, const struct board_channel_config *cha
 	};
 	HAL_GPIO_Init(port, &itd);
 
-	channel->hfdcan.Instance = channel_config->interface;
+	channel->channel.Instance = channel_config->interface;
 }
 
 void device_sysclock_config(void)

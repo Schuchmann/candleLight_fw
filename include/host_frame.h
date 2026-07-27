@@ -29,14 +29,41 @@
 #include "config.h"
 #include "usbd_gs_can.h"
 
-static inline can_data_t
-*gs_host_frame_object_get_channel(USBD_GS_CAN_HandleTypeDef *hcan,
-								  struct gs_host_frame_object *frame_object)
+static inline uint8_t
+gs_host_frame_object_get_channel_nr(const struct gs_host_frame_object *frame_object)
 {
-	u8 channel_nr = 0;
-
 	if (NUM_CAN_CHANNEL > 1)
-		channel_nr = frame_object->frame.channel;
+		return frame_object->frame.channel;
+
+	return 0;
+}
+
+static inline can_data_t *
+gs_host_frame_object_get_channel(USBD_GS_CAN_HandleTypeDef *hcan,
+								 const struct gs_host_frame_object *frame_object)
+{
+	const uint8_t channel_nr = gs_host_frame_object_get_channel_nr(frame_object);
 
 	return &hcan->channels[channel_nr];
+}
+
+static inline
+struct gs_host_frame_object *
+gs_host_frame_object_get_locked(USBD_GS_CAN_HandleTypeDef *hcan)
+{
+	struct gs_host_frame_object *frame_object;
+
+	bool was_irq_enabled = disable_irq();
+	frame_object = list_first_entry_or_null(&hcan->list_frame_pool,
+											struct gs_host_frame_object,
+											list);
+	if (!frame_object) {
+		restore_irq(was_irq_enabled);
+		return NULL;
+	}
+
+	list_del(&frame_object->list);
+	restore_irq(was_irq_enabled);
+
+	return frame_object;
 }

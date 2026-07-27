@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2016 Hubert Denkmair
+ * Copyright (c) 2026 Marc Kleine-Budde <kernel@pengutronix.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,13 +25,27 @@
 
 #pragma once
 
-#include "hal_include.h"
+#include <stdbool.h>
+#include <stdint.h>
 
-#define USBD_MAX_NUM_INTERFACES		  1
-#define USBD_MAX_NUM_CONFIGURATION	  1
-#define USBD_DESC_BUF_SIZE			  192
-#define USBD_SUPPORT_USER_STRING_DESC 1
-#define USBD_SELF_POWERED			  0
-#define DEVICE_FS					  0
+struct can_channel;
+struct can_drv_reg_status;
+struct gs_device_state;
+struct gs_device_tdc;
+struct gs_host_frame;
 
-#define USBD_ErrLog(...)
+void can_drv_enable(struct can_channel *channel);
+void can_drv_disable(struct can_channel *channel);
+
+void can_drv_get_device_tdc(const struct can_channel *channel, struct gs_device_tdc *tdc);
+
+void can_drv_read_reg_status(struct can_channel *channel);
+
+bool can_drv_bus_error_pending(const struct can_channel *channel);
+bool can_drv_handle_bus_error(const struct can_channel *channel, struct gs_host_frame *frame);
+
+enum gs_can_state can_drv_get_state(const struct can_channel *channel);
+void can_drv_get_device_state(const struct can_channel *channel, struct gs_device_state *state);
+void can_drv_handle_state_change(const struct can_channel *channel, struct gs_host_frame *frame);
+
+void can_drv_handle_bus_off_recovery(struct can_channel *channel);
